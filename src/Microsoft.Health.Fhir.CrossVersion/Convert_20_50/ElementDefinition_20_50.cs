@@ -117,7 +117,7 @@ public class ElementDefinition_20_50 : ICrossVersionProcessor<ElementDefinition>
             if ((v.Slicing == null) &&
                 !v.Path.EndsWith(".extension", StringComparison.Ordinal))
             {
-                v.ElementId = v.SliceName;
+                // v.ElementId = v.SliceName;
                 v.SliceName = null;
             }
         }
@@ -142,7 +142,7 @@ public class ElementDefinition_20_50 : ICrossVersionProcessor<ElementDefinition>
                 throw new InvalidDataException($"Could not resolve NameReference {v.ContentReference} field {v.Path}");
             }
 
-            v.ContentReference = updated;
+            v.ContentReference = "#" + updated;
         }
         return v;
 	}
@@ -253,7 +253,7 @@ public class ElementDefinition_20_50 : ICrossVersionProcessor<ElementDefinition>
 				break;
 
 			case "type":
-				current.Type.Add(Extract20ElementDefinitionTypeRefComponent(node));
+				current.Type.Add(Extract20ElementDefinitionTypeRefComponent(current, node));
 				break;
 
 			case "defaultValueBase64Binary":
@@ -1241,7 +1241,7 @@ public class ElementDefinition_20_50 : ICrossVersionProcessor<ElementDefinition>
 		return current;
 	}
 
-	private ElementDefinition.TypeRefComponent Extract20ElementDefinitionTypeRefComponent(ISourceNode parent)
+	private ElementDefinition.TypeRefComponent Extract20ElementDefinitionTypeRefComponent(ElementDefinition ed, ISourceNode parent)
 	{
 		ElementDefinition.TypeRefComponent current = new();
 
@@ -1251,7 +1251,39 @@ public class ElementDefinition_20_50 : ICrossVersionProcessor<ElementDefinition>
 			{
 				case "code":
 					current.CodeElement = new FhirUri(node.Text);
-					break;
+                    foreach (ISourceNode child in node.Children())
+                    {
+                        // Need to read the extension that has the primitive type in it.
+                        _converter._element.Process(child, current.CodeElement);
+                    }
+                    if (string.IsNullOrEmpty(node.Text))
+                    {
+                        // TODO: Move this into a dictionary of type information
+                        // (assuming that this won't change, however this is only required for DSTU2/STU3)
+                        switch (ed.Path)
+                        {
+                            case "base64Binary.value": current.CodeElement = new FhirUri("http://hl7.org/fhirpath/System.String"); break;
+                            case "boolean.value": current.CodeElement = new FhirUri("http://hl7.org/fhirpath/System.Boolean"); break;
+                            case "code.value": current.CodeElement = new FhirUri("http://hl7.org/fhirpath/System.String"); break;
+                            case "date.value": current.CodeElement = new FhirUri("http://hl7.org/fhirpath/System.Date"); break;
+                            case "dateTime.value": current.CodeElement = new FhirUri("http://hl7.org/fhirpath/System.DateTime"); break;
+                            case "decimal.value": current.CodeElement = new FhirUri("http://hl7.org/fhirpath/System.Decimal"); break;
+                            case "id.value": current.CodeElement = new FhirUri("http://hl7.org/fhirpath/System.String"); break;
+                            case "instant.value": current.CodeElement = new FhirUri("http://hl7.org/fhirpath/System.DateTime"); break;
+                            case "integer.value": current.CodeElement = new FhirUri("http://hl7.org/fhirpath/System.Integer"); break;
+                            case "markdown.value": current.CodeElement = new FhirUri("http://hl7.org/fhirpath/System.String"); break;
+                            case "oid.value": current.CodeElement = new FhirUri("http://hl7.org/fhirpath/System.String"); break;
+                            case "positiveInt.value": current.CodeElement = new FhirUri("http://hl7.org/fhirpath/System.Integer"); break;
+                            case "string.value": current.CodeElement = new FhirUri("http://hl7.org/fhirpath/System.String"); break;
+                            case "time.value": current.CodeElement = new FhirUri("http://hl7.org/fhirpath/System.Time"); break;
+                            case "unsignedInt.value": current.CodeElement = new FhirUri("http://hl7.org/fhirpath/System.Integer"); break;
+                            case "uri.value": current.CodeElement = new FhirUri("http://hl7.org/fhirpath/System.String"); break;
+                            case "uuid.value": current.CodeElement = new FhirUri("http://hl7.org/fhirpath/System.String"); break;
+                            case "xhtml.value": current.CodeElement = new FhirUri("http://hl7.org/fhirpath/System.String"); break;
+                            default: break;
+                        }
+                    }
+                    break;
 
 				case "_code":
 					_converter._element.Process(node, current.CodeElement);

@@ -365,12 +365,12 @@ public partial class DefinitionCollection
             if (string.IsNullOrEmpty(ed.ElementId))
             {
                 AddMissingElementId(ed, idByDepth);
+            }
 
-                // DSTU2 allowed repetitions of elements that we want to ignore (slicing definition before every slice)
-                if (allFieldOrders.ContainsKey(ed.ElementId))
-                {
-                    continue;
-                }
+            // DSTU2 allowed repetitions of elements that we want to ignore (slicing definition before every slice)
+            if (allFieldOrders.ContainsKey(ed.ElementId))
+            {
+                continue;
             }
 
             int lastDot = ed.Path.LastIndexOf('.');

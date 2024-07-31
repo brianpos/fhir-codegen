@@ -5,6 +5,7 @@
 
 using Hl7.Fhir.ElementModel;
 using Hl7.Fhir.Model;
+using Hl7.Fhir.Specification.Snapshot;
 
 namespace Microsoft.Health.Fhir.CrossVersion.Convert_20_50;
 
@@ -105,6 +106,9 @@ public class StructureDefinition_20_50 : ICrossVersionProcessor<StructureDefinit
         //    v.Title = v.Name;
         //    v.Name = v.Id;
         //}
+
+        // Now that we have the content, lets re-generate the ElementIds
+        ElementIdGenerator.Update(v, true);
 
         return v;
     }
